@@ -6,11 +6,11 @@ on:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        node-version: [18, 20, 22]  # 3 variants (you can change these if you like)
-
-    runs-on: ubuntu-latest
+        node-version: [18, 20, 22]   # ✅ 3 variants → 3 matrix jobs
 
     steps:
       - name: Checkout repository
