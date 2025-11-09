@@ -1,4 +1,4 @@
-name: Matrix Build c75b363
+name: CI Matrix (30cebfb)
 
 on:
   push:
@@ -6,32 +6,53 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    # Multi-platform runners (3 matrix variants in parallel)
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18, 20, 22]   # ✅ 3 variants → 3 matrix jobs
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    # Use bash across all runners (including Windows)
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      # REQUIRED identifier
+      - name: matrix-30cebfb
+        run: echo "Building for OS ${{ matrix.os }}"
+
+      - name: Set up Node (for a consistent tool to generate output)
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: matrix-c75b363
-        run: echo "Building for Node.js version ${{ matrix.node-version }}"
+          node-version: '20'
 
       - name: Generate build artifact
         run: |
-          mkdir -p artifacts
-          echo "Build output for Node.js version ${{ matrix.node-version }}" \
-            > artifacts/output-node-${{ matrix.node-version }}.txt
+          mkdir -p dist
+          # Create rich, non-empty content
+          {
+            echo "Build output for OS ${{ matrix.os }}";
+            echo "GitHub Run ID: ${{ github.run_id }}";
+            echo "GitHub Run Number: ${{ github.run_number }}";
+            node -e "console.log('Timestamp UTC:', new Date().toISOString())";
+            echo "Runner OS: $RUNNER_OS";
+            echo "Commit: ${{ github.sha }}";
+          } > dist/output-${{ matrix.os }}.txt
+
+          # Prove non-empty
+          test -s dist/output-${{ matrix.os }}.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-c75b363-node${{ matrix.node-version }}
-          path: artifacts/output-node-${{ matrix.node-version }}.txt
+          # REQUIRED prefix: build-30cebfb-<variant>
+          name: build-30cebfb-${{ matrix.os }}
+          path: dist/output-${{ matrix.os }}.txt
+          if-no-files-found: error
+          retention-days: 7
